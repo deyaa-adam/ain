@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Surgical AI Dashboard</title>
+
+<style>
+body {
+    background: #0a0f1a;
+    color: #ffffff;
+    font-family: Arial;
+    text-align: center;
+}
+
+.stream-container {
+    position: relative;
+    width: 900px;
+    margin: auto;
+}
+
+.stream-container img,
+.stream-container video {
+    width: 100%;
+    border: 2px solid #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #00ffcc33;
+}
+
+video {
+    display: none;
+}
+
+.logo {
+    width: 250px;
+    border: 0px;
+    box-shadow: 0 0 0px;
+}
+</style>
+</head>
+
+<body>
+
+<img class="logo" src="logo.png">
+<h2>AIN Surgical Live Stream</h2>
+
+<div class="stream-container">
+    <img id="stream"/>
+    <video id="fallback" autoplay loop muted>
+        <source src="fallback.mp4" type="video/mp4">
+    </video>
+</div>
+
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+
+<script>
+const socket = io("http://127.0.0.1:5000");
+
+const img = document.getElementById("stream");
+const video = document.getElementById("fallback");
+
+let lastFrameTime = Date.now();
+const TIMEOUT = 2000; // 2 seconds without frames = no signal
+
+socket.on("response", (data) => {
+    const blob = new Blob([data], {type: "image/jpeg"});
+    img.src = URL.createObjectURL(blob);
+
+    lastFrameTime = Date.now();
+
+    // Show stream, hide video
+    img.style.display = "block";
+    video.style.display = "none";
+});
+
+// Check if stream stopped
+setInterval(() => {
+    if (Date.now() - lastFrameTime > TIMEOUT) {
+        // No signal → show fallback video
+        img.style.display = "none";
+        video.style.display = "block";
+    }
+}, 500);
+</script>
+
+</body>
+</html>
